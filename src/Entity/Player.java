@@ -11,34 +11,54 @@ public class Player extends Entity {
     GamePanel gamePanel;
     InputHandler inputHandler;
 
+    public final int screenX;
+    public final int screenY;
+
     public Player(GamePanel gPanel, InputHandler iHandler) {
         this.gamePanel = gPanel;
         this.inputHandler = iHandler;
+
+        screenX = (gamePanel.screenWidth - gamePanel.tileSize) / 2;
+        screenY = (gamePanel.screenHeight - gamePanel.tileSize) / 2;
 
         setDefaultValues();
     }
 
     public void setDefaultValues() {
-        x = 100;
-        y = 100;
-        speed = 4;
+        worldX = 3 * gamePanel.tileSize;
+        worldY = 3 * gamePanel.tileSize;
+        speed = 8;
     }
-    
+
     public void update() {
         if (inputHandler.upPressed) {
-            y -= speed;
-        } else if (inputHandler.downPressed) {
-            y += speed;
-        } else if (inputHandler.leftPressed) {
-            x -= speed;
-        } else if (inputHandler.rightPressed) {
-            x += speed;
+            verticalSpeed = -speed;
         }
+        if (inputHandler.downPressed) {
+            verticalSpeed = speed;
+        }
+        if (inputHandler.leftPressed) {
+            horizontalSpeed = -speed;
+        }
+        if (inputHandler.rightPressed) {
+            horizontalSpeed = speed;
+        }
+
+        if (Math.abs(horizontalSpeed) > 0 && Math.abs(verticalSpeed) > 0) {
+            horizontalSpeed = (int) Math.round((float) horizontalSpeed / 1.41);
+            verticalSpeed = (int) Math.round((float) verticalSpeed / 1.41);
+        }
+
+        worldX += horizontalSpeed;
+        worldY += verticalSpeed;
+
+        horizontalSpeed = 0;
+        verticalSpeed = 0;
     }
 
     public void draw(Graphics2D graphics2d) {
         graphics2d.setColor(Color.white);
 
-        graphics2d.fillRect(x, y, gamePanel.tileSize, gamePanel.tileSize);
+        graphics2d.fillRect(worldX, worldY, gamePanel.tileSize, gamePanel.tileSize);
     }
 }
