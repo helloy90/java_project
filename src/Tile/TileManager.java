@@ -10,24 +10,23 @@ import src.GameEngine.GamePanel;
 
 public class TileManager {
     GamePanel gamePanel;
-    Tile[] tileTypes;
-    int tileMap[][];
+    public Tile[] tileTypes;
+    public int[][] tileMap;
 
     public TileManager(GamePanel gPanel) {
         this.gamePanel = gPanel;
         tileTypes = new Tile[10];
-        getTileImage();
-        loadMap("/Resources/Maps/map01.txt");
+        getTiles();
     }
 
-    public void getTileImage() {
-        tileTypes[0] = new Tile("Floor", false);
+    public void getTiles() {
+        tileTypes[0] = new Tile("Floor", false, TileType.None);
 
-        tileTypes[1] = new Tile("Barier", true);
+        tileTypes[1] = new Tile("Barier", true, TileType.Barier);
 
-        tileTypes[2] = new Tile("DamageTile", true);
+        tileTypes[2] = new Tile("DamageTile", true, TileType.DamageTile);
 
-        tileTypes[3] = new Tile("EndTile", true);
+        tileTypes[3] = new Tile("EndTile", true, TileType.EndTile);
     }
 
     public void loadMap(String filepath) {
@@ -63,16 +62,37 @@ public class TileManager {
     }
 
     public void draw(Graphics2D graphics2d) {
-        int x = 0;
-        int y = 0;
+        int worldCol = 0;
+        int worldRow = 0;
+
+        int worldX = 0;
+        int worldY = 0;
+
+        int screenX = 0;
+        int screenY = 0;
 
         for (int[] row : tileMap) {
             for (int tileNum : row) {
-                graphics2d.drawImage(tileTypes[tileNum].image, x, y, gamePanel.tileSize, gamePanel.tileSize, null);
-                x += gamePanel.tileSize;
+
+                worldX = worldCol * GamePanel.tileSize;
+                worldY = worldRow * GamePanel.tileSize;
+                // Correct camera placement
+                screenX = worldX - gamePanel.player.worldX + gamePanel.player.screenX;
+                screenY = worldY - gamePanel.player.worldY + gamePanel.player.screenY;
+                
+                if (worldX + GamePanel.tileSize > gamePanel.player.worldX - gamePanel.player.screenX
+                        && worldX - GamePanel.tileSize < gamePanel.player.worldX + gamePanel.player.screenX
+                        && worldY + GamePanel.tileSize > gamePanel.player.worldY - gamePanel.player.screenY
+                        && worldY - GamePanel.tileSize < gamePanel.player.worldY + gamePanel.player.screenY) {
+                    graphics2d.drawImage(tileTypes[tileNum].image, screenX, screenY, GamePanel.tileSize,
+                            GamePanel.tileSize,
+                            null);
+                }
+
+                worldCol++;
             }
-            x = 0;
-            y += gamePanel.tileSize;
+            worldCol = 0;
+            worldRow++;
         }
     }
 }

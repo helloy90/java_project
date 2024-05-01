@@ -10,6 +10,8 @@ public class InputHandler implements KeyListener {
     public boolean leftPressed;
     public boolean rightPressed;
 
+    public boolean canRestart;
+
     @Override
     public void keyTyped(KeyEvent e) {
 
@@ -31,6 +33,9 @@ public class InputHandler implements KeyListener {
             rightPressed = true;
         }
 
+        if (key == KeyEvent.VK_R) {
+            canRestart = true;
+        }
     }
 
     @Override
@@ -50,4 +55,12 @@ public class InputHandler implements KeyListener {
         }
     }
     
+    public void reset() {
+        upPressed = false;
+        downPressed = false;
+        leftPressed = false;
+        rightPressed = false;
+
+        canRestart = false;
+    }
 }

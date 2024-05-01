@@ -9,27 +9,35 @@ import javax.swing.JPanel;
 
 import src.Entity.Player;
 import src.Tile.TileManager;
+import src.UI.UI;
 
 public class GamePanel extends JPanel implements Runnable {
-    public final int tileSize = 48;
-    public final int screenWidth = 1200;
-    public final int screenHeight = 800;
+    public static final int tileSize = 48;
+    public static final int screenWidth = 1200;
+    public static final int screenHeight = 800;
 
-    public final int maxScreenColumns = screenWidth / tileSize;
-    public final int maxScreenRows = screenHeight / tileSize;
+    public static final int maxScreenColumns = screenWidth / tileSize;
+    public static final int maxScreenRows = screenHeight / tileSize;
 
-    int FPS = 60;
+    public final int FPS = 60;
 
-    InputHandler inputHandler;
-    TileManager tileManager;
+    public InputHandler inputHandler;
+    public TileManager tileManager;
+    UI ui;
+    public RecordStorage recordStorage;
 
-    Player player;
+    public Player player;
+
+    String[] maps = { "/Resources/Maps/map01.txt",
+            "/Resources/Maps/map02.txt",
+            "/Resources/Maps/map03.txt" };
+    int nextMap;
 
     Thread gameThread;
 
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
-        this.setBackground(Color.PINK);
+        this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
 
         inputHandler = new InputHandler();
@@ -37,8 +45,11 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
 
         tileManager = new TileManager(this);
+        ui = new UI(this);
+        recordStorage = new RecordStorage(this);
 
         player = new Player(this, inputHandler);
+        nextMap = 0;
     }
 
     public void startGameThread() {
@@ -46,8 +57,24 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
+    public void loadNextMap() {
+        if (nextMap < 3) {
+            tileManager.loadMap(maps[nextMap]);
+            nextMap++;
+            mapReset();
+        }
+    }
+
+    public void mapReset() {
+        ui.reset();
+        player.reset();
+        inputHandler.reset();
+    }
+
     @Override
     public void run() {
+        loadNextMap();
+        ui.reset();
         int secToNanoSec = 1000000000;
 
         double drawInterval = secToNanoSec / FPS;
@@ -77,9 +104,16 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+        if (!player.dead) {
+            player.update();
+            if (player.escaped) {
+                ui.getWinScreen();
+            }
+        } else {
+            ui.getDeathScreen();
+        }
 
-        player.update();
-
+        ui.update();
     }
 
     public void paintComponent(Graphics g) {
@@ -90,6 +124,8 @@ public class GamePanel extends JPanel implements Runnable {
         tileManager.draw(graphics2d);
 
         player.draw(graphics2d);
+
+        ui.draw(graphics2d);
 
         graphics2d.dispose();
     }

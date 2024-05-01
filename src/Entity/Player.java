@@ -3,62 +3,89 @@ package src.Entity;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import src.Components.CollisionComponent;
+import src.Components.MovementComponent;
 import src.GameEngine.GamePanel;
 import src.GameEngine.InputHandler;
+import src.Tile.TileType;
 
 public class Player extends Entity {
-
     GamePanel gamePanel;
-    InputHandler inputHandler;
+    public boolean dead;
+    public boolean escaped;
+
+    MovementComponent movementComponent;
+    CollisionComponent collisionComponent;
+
+    public final int sizeX;
+    public final int sizeY;
 
     public final int screenX;
     public final int screenY;
 
     public Player(GamePanel gPanel, InputHandler iHandler) {
         this.gamePanel = gPanel;
-        this.inputHandler = iHandler;
 
-        screenX = (gamePanel.screenWidth - gamePanel.tileSize) / 2;
-        screenY = (gamePanel.screenHeight - gamePanel.tileSize) / 2;
+        sizeX = GamePanel.tileSize;
+        sizeY = GamePanel.tileSize;
 
-        setDefaultValues();
+        screenX = (GamePanel.screenWidth - GamePanel.tileSize) / 2;
+        screenY = (GamePanel.screenHeight - GamePanel.tileSize) / 2;
+
+        movementComponent = new MovementComponent(this, iHandler);
+        collisionComponent = new CollisionComponent(this);
+
+        reset();
     }
 
-    public void setDefaultValues() {
-        worldX = 3 * gamePanel.tileSize;
-        worldY = 3 * gamePanel.tileSize;
-        speed = 8;
+    public void setSpawnPoint() {
+        worldX = 2 * GamePanel.tileSize;
+        worldY = 2 * GamePanel.tileSize;
+    }
+
+    public void reset() {
+        dead = false;
+        escaped = false;
+        setSpawnPoint();
+    }
+
+    public void playerDied() {
+        dead = true;
+    }
+
+    public void playerEscaped() {
+        escaped = true;
     }
 
     public void update() {
-        if (inputHandler.upPressed) {
-            verticalSpeed = -speed;
-        }
-        if (inputHandler.downPressed) {
-            verticalSpeed = speed;
-        }
-        if (inputHandler.leftPressed) {
-            horizontalSpeed = -speed;
-        }
-        if (inputHandler.rightPressed) {
-            horizontalSpeed = speed;
+
+        movementComponent.update();
+
+        if (!collisionComponent.tileTypeMet(worldX + movementComponent.getHorizontalSpeed(),
+                worldY + movementComponent.getVerticalSpeed(), sizeX,
+                sizeY, gamePanel.tileManager.tileMap, TileType.Barier)) {
+            worldX += movementComponent.getHorizontalSpeed();
+            worldY += movementComponent.getVerticalSpeed();
+
+            if (collisionComponent.tileTypeMet(worldX, worldY, sizeX, sizeY, gamePanel.tileManager.tileMap,
+                    TileType.DamageTile)) {
+                playerDied();
+            } else if (collisionComponent.tileTypeMet(worldX, worldY, sizeX, sizeY, gamePanel.tileManager.tileMap,
+                    TileType.EndTile)) {
+                playerEscaped();
+            }
         }
 
-        if (Math.abs(horizontalSpeed) > 0 && Math.abs(verticalSpeed) > 0) {
-            horizontalSpeed = (int) Math.round((float) horizontalSpeed / 1.41);
-            verticalSpeed = (int) Math.round((float) verticalSpeed / 1.41);
-        }
-
-        worldX += horizontalSpeed;
-        worldY += verticalSpeed;
-
-        horizontalSpeed = 0;
-        verticalSpeed = 0;
+        movementComponent.resetSpeed();
     }
 
     public void draw(Graphics2D graphics2d) {
         graphics2d.setColor(Color.white);
 
-        graphics2d.fillRect(worldX, worldY, gamePanel.tileSize, gamePanel.tileSize);
+        graphics2d.fillRect(screenX, screenY, sizeX, sizeY);
+
+        // collider
+        graphics2d.setColor(Color.blue);
+        graphics2d.drawRect(screenX, screenY, sizeX, sizeY);
     }
 }
