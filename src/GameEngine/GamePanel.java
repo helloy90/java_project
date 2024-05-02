@@ -27,11 +27,11 @@ public class GamePanel extends JPanel implements Runnable {
     public RecordStorage recordStorage;
 
     public Player player;
+    public boolean playerFinished;
 
-    String[] maps = { "/Resources/Maps/map01.txt",
-            "/Resources/Maps/map02.txt",
-            "/Resources/Maps/map03.txt" };
+    String[] maps;
     int nextMap;
+    public int amountOfMaps;
 
     Thread gameThread;
 
@@ -39,6 +39,13 @@ public class GamePanel extends JPanel implements Runnable {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
+        maps = new String[] {
+                "/Resources/Maps/map01.txt",
+                "/Resources/Maps/map02.txt",
+                "/Resources/Maps/map03.txt"
+};
+        nextMap = 0;
+        amountOfMaps = maps.length;
 
         inputHandler = new InputHandler();
         this.addKeyListener(inputHandler);
@@ -49,7 +56,7 @@ public class GamePanel extends JPanel implements Runnable {
         recordStorage = new RecordStorage(this);
 
         player = new Player(this, inputHandler);
-        nextMap = 0;
+        playerFinished = false;
     }
 
     public void startGameThread() {
@@ -58,7 +65,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void loadNextMap() {
-        if (nextMap < 3) {
+        if (nextMap < amountOfMaps) {
             tileManager.loadMap(maps[nextMap]);
             nextMap++;
             mapReset();
@@ -69,6 +76,11 @@ public class GamePanel extends JPanel implements Runnable {
         ui.reset();
         player.reset();
         inputHandler.reset();
+    }
+
+    public void FinishGame() {
+        playerFinished = true;
+        ui.prepareFinishText();
     }
 
     @Override
@@ -104,6 +116,9 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
+        if (playerFinished) {
+            return;
+        }
         if (!player.dead) {
             player.update();
             if (player.escaped) {
@@ -120,6 +135,11 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
 
         Graphics2D graphics2d = (Graphics2D) g;
+
+        if (playerFinished) {
+            ui.drawFinish(graphics2d, recordStorage.mapsTime);
+            return;
+        }
 
         tileManager.draw(graphics2d);
 

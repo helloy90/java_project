@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import src.GameEngine.GamePanel;
 
@@ -16,6 +17,9 @@ public class UI {
     public boolean playerEscaped;
     int currentMap;
 
+    String deathLine;
+    ArrayList<String> finishText;
+
     public UI(GamePanel gPanel) {
         this.gamePanel = gPanel;
 
@@ -26,6 +30,9 @@ public class UI {
         playerEscaped = false;
 
         currentMap = 0;
+
+        deathLine = "You died! Press R to restart.";
+        finishText = new ArrayList<String>();
     }
 
     public void reset() {
@@ -42,12 +49,24 @@ public class UI {
         playerEscaped = true;
     }
 
+    public void prepareFinishText() {
+
+        finishText.add("Congratulations, you have completed the game! ");
+        finishText.add("Here is your results:");
+        for (int i = 1; i <= gamePanel.amountOfMaps; i++) {
+            finishText.add("Map " + i + " - " + dFormat.format(gamePanel.recordStorage.mapsTime[i - 1]) + "s");
+        }
+    }
+
     public void update() {
         if (!playerDead) {
             if (playerEscaped) {
                 gamePanel.recordStorage.saveTimeOnMap(currentMap, timeOnCurrentMap);
                 gamePanel.loadNextMap();
                 currentMap++;
+                if (currentMap == gamePanel.amountOfMaps) {
+                    gamePanel.FinishGame();
+                }
             }
         } else if (gamePanel.inputHandler.canRestart) {
             gamePanel.mapReset();
@@ -58,15 +77,28 @@ public class UI {
         if (!playerDead) {
             graphics2d.setFont(arial_40);
             graphics2d.setColor(Color.WHITE);
-            timeOnCurrentMap += (double)1 / gamePanel.FPS;
+            timeOnCurrentMap += (double) 1 / gamePanel.FPS;
             graphics2d.drawString("Time: " + dFormat.format(timeOnCurrentMap), 50, 50);
-            // graphics2d.drawString("Overall time: " + gamePanel.player.timeOnCurrentTry, 0, 0);
+            // graphics2d.drawString("Overall time: " + gamePanel.player.timeOnCurrentTry,
+            // 0, 0);
         } else {
-            String text = "You died! Press R to restart.";
             graphics2d.setFont(arial_40);
             graphics2d.setColor(Color.RED);
-            int textLength = (int)graphics2d.getFontMetrics().getStringBounds(text, graphics2d).getWidth();
-            graphics2d.drawString(text, GamePanel.screenWidth / 2 - textLength / 2, GamePanel.screenHeight - GamePanel.tileSize * 3);
+            int textLength = (int) graphics2d.getFontMetrics().getStringBounds(deathLine, graphics2d).getWidth();
+            graphics2d.drawString(deathLine, GamePanel.screenWidth / 2 - textLength / 2,
+                    GamePanel.screenHeight - GamePanel.tileSize * 3);
+        }
+    }
+
+    public void drawFinish(Graphics2D graphics2d, double[] mapsTime) {
+        graphics2d.setFont(arial_40);
+        graphics2d.setColor(Color.GREEN);
+        int currentLine = 0;
+        for (String line : finishText) {
+            int lineLength = (int) graphics2d.getFontMetrics().getStringBounds(line, graphics2d).getWidth();
+            graphics2d.drawString(line, GamePanel.screenWidth / 2 - lineLength / 2,
+                    GamePanel.screenHeight - GamePanel.tileSize * (finishText.size() - currentLine));
+            currentLine++;
         }
     }
 }

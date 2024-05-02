@@ -6,7 +6,7 @@ public class RecordStorage {
 
     public RecordStorage(GamePanel gPanel) {
         this.gamePanel = gPanel;
-        mapsTime = new double[3];
+        mapsTime = new double[gamePanel.amountOfMaps];
     }
 
     public void saveTimeOnMap(int currentMap, double time) {

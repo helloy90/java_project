@@ -1,5 +1,4 @@
 import javax.swing.JFrame;
-
 import src.GameEngine.GamePanel;
 
 public class Main {
