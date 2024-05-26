@@ -1,16 +1,9 @@
 package src.Components;
 
-import src.Entity.Entity;
 import src.GameEngine.GamePanel;
 import src.Tile.TileType;
 
 public class CollisionComponent {
-    public Entity entity;
-
-    public CollisionComponent(Entity entity) {
-        this.entity = entity;
-    }
-
     public boolean certainTile(int x, int y, int[][] tileMap, TileType tileType) {
         int tileX = x / GamePanel.tileSize;
         int tileY = y / GamePanel.tileSize;

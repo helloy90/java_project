@@ -7,8 +7,9 @@ import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
-import src.Entity.Player;
+import src.Player.Player;
 import src.Tile.TileManager;
+import src.TimeRecord.RecordStorage;
 import src.UI.UI;
 
 public class GamePanel extends JPanel implements Runnable {
@@ -23,11 +24,13 @@ public class GamePanel extends JPanel implements Runnable {
 
     public InputHandler inputHandler;
     public TileManager tileManager;
+
     UI ui;
     public RecordStorage recordStorage;
 
     public Player player;
-    public boolean playerFinished;
+
+    Camera camera;
 
     String[] maps;
     int nextMap;
@@ -39,24 +42,31 @@ public class GamePanel extends JPanel implements Runnable {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
-        maps = new String[] {
-                "/Resources/Maps/map01.txt",
-                "/Resources/Maps/map02.txt",
-                "/Resources/Maps/map03.txt"
-};
-        nextMap = 0;
-        amountOfMaps = maps.length;
 
         inputHandler = new InputHandler();
         this.addKeyListener(inputHandler);
         this.setFocusable(true);
 
+        loadMaps();
+
         tileManager = new TileManager(this);
+
         ui = new UI(this);
         recordStorage = new RecordStorage(this);
 
         player = new Player(this, inputHandler);
-        playerFinished = false;
+        camera = new Camera(player, tileManager);
+    }
+
+    void loadMaps() {
+        maps = new String[] {
+                "/Resources/Maps/map01.txt",
+                "/Resources/Maps/map02.txt",
+                "/Resources/Maps/map03.txt"
+        };
+
+        nextMap = 0;
+        amountOfMaps = maps.length;
     }
 
     public void startGameThread() {
@@ -69,24 +79,26 @@ public class GamePanel extends JPanel implements Runnable {
             tileManager.loadMap(maps[nextMap]);
             nextMap++;
             mapReset();
+        } else if (nextMap == amountOfMaps) {
+            FinishGame();
         }
     }
 
     public void mapReset() {
-        ui.reset();
+        recordStorage.timeReset();
         player.reset();
         inputHandler.reset();
     }
 
     public void FinishGame() {
-        playerFinished = true;
+        player.playerModel.finished = true;
         ui.prepareFinishText();
+        recordStorage.sendTimeToServer();
     }
 
     @Override
     public void run() {
         loadNextMap();
-        ui.reset();
         int secToNanoSec = 1000000000;
 
         double drawInterval = secToNanoSec / FPS;
@@ -116,19 +128,20 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
-        if (playerFinished) {
+        if (player.playerModel.finished) {
             return;
         }
-        if (!player.dead) {
+        if (!player.playerModel.dead) {
             player.update();
-            if (player.escaped) {
-                ui.getWinScreen();
+            recordStorage.update();
+            if (player.playerModel.escaped) {
+                recordStorage.saveTimeOnMap(nextMap - 1, recordStorage.timeOnCurrentMap);
+                loadNextMap();
             }
-        } else {
-            ui.getDeathScreen();
         }
-
-        ui.update();
+        if (inputHandler.canRestart) {
+            mapReset();
+        }
     }
 
     public void paintComponent(Graphics g) {
@@ -136,12 +149,13 @@ public class GamePanel extends JPanel implements Runnable {
 
         Graphics2D graphics2d = (Graphics2D) g;
 
-        if (playerFinished) {
-            ui.drawFinish(graphics2d, recordStorage.mapsTime);
+        if (player.playerModel.finished) {
+            ui.drawFinish(graphics2d);
+            graphics2d.dispose();
             return;
         }
 
-        tileManager.draw(graphics2d);
+        camera.draw(graphics2d);
 
         player.draw(graphics2d);
 

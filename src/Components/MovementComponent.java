@@ -1,6 +1,5 @@
 package src.Components;
 
-import src.Entity.Entity;
 import src.GameEngine.InputHandler;
 
 public class MovementComponent {
@@ -13,7 +12,7 @@ public class MovementComponent {
 
     public int speed;
 
-    public MovementComponent(Entity player, InputHandler iHandler) {
+    public MovementComponent(InputHandler iHandler) {
         this.inputHandler = iHandler;
 
         speed = 8;

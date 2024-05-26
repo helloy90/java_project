@@ -1,6 +1,5 @@
 package src.Tile;
 
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -61,38 +60,4 @@ public class TileManager {
         }
     }
 
-    public void draw(Graphics2D graphics2d) {
-        int worldCol = 0;
-        int worldRow = 0;
-
-        int worldX = 0;
-        int worldY = 0;
-
-        int screenX = 0;
-        int screenY = 0;
-
-        for (int[] row : tileMap) {
-            for (int tileNum : row) {
-
-                worldX = worldCol * GamePanel.tileSize;
-                worldY = worldRow * GamePanel.tileSize;
-                // Correct camera placement
-                screenX = worldX - gamePanel.player.worldX + gamePanel.player.screenX;
-                screenY = worldY - gamePanel.player.worldY + gamePanel.player.screenY;
-                
-                if (worldX + GamePanel.tileSize > gamePanel.player.worldX - gamePanel.player.screenX
-                        && worldX - GamePanel.tileSize < gamePanel.player.worldX + gamePanel.player.screenX
-                        && worldY + GamePanel.tileSize > gamePanel.player.worldY - gamePanel.player.screenY
-                        && worldY - GamePanel.tileSize < gamePanel.player.worldY + gamePanel.player.screenY) {
-                    graphics2d.drawImage(tileTypes[tileNum].image, screenX, screenY, GamePanel.tileSize,
-                            GamePanel.tileSize,
-                            null);
-                }
-
-                worldCol++;
-            }
-            worldCol = 0;
-            worldRow++;
-        }
-    }
 }
